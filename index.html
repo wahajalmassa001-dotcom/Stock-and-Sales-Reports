@@ -250,8 +250,9 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   }
   .unified-drop.drag{border-color:var(--accent); background:color-mix(in srgb, var(--accent) 05%, transparent);}
 
-  .steps{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:24px 0;}
-  @media (max-width:900px){.steps{grid-template-columns:1fr;}}
+  .steps{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin:24px 0;}
+  @media (max-width:1150px){.steps{grid-template-columns:repeat(2,1fr);}}
+  @media (max-width:640px){.steps{grid-template-columns:1fr;}}
   .step{padding:16px 18px;}
   .step .n{font-family:'Tajawal',sans-serif; font-weight:900; font-size:20px; color:var(--gold); margin-bottom:6px;}
   .step h3{margin:0 0 6px; font-size:14px;}
@@ -359,7 +360,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     </nav>
     <div class="sidebar-foot">
       <div class="status-pill"><span class="dot" id="dotStock"></span> حركة المخزون</div>
-      <div class="status-pill"><span class="dot" id="dotSales"></span> تقييم المبيعات</div>
+      <div class="status-pill"><span class="dot" id="dotSales"></span> ربحية المنتجات</div>
       <div class="status-pill"><span class="dot" id="dotVariant"></span> متغير المنتج (اختياري)</div>
       <div class="theme-switch" id="themeSwitch" title="تبديل المظهر">
         <span class="theme-dot active" data-theme-btn="diamond" title="الماسة الليلية"></span>
@@ -381,6 +382,10 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         <div class="period-badge" id="periodBadge" style="display:none;">
           <span>الفترة:</span> <b><span id="periodText" class="num">—</span></b>
         </div>
+        <div class="period-badge" id="snapshotBadge" style="display:none; border-color:var(--accent-dim);">
+          <span>نسخة معتمدة بتاريخ:</span> <b><span id="snapshotText" class="num">—</span></b>
+        </div>
+        <button class="btn primary" id="publishBtn" style="display:none;" onclick="publishSnapshot()" title="ينشئ ملف عرض مستقل بنتائج هذا التحليل فقط (بدون التقارير الخام) لرفعه ومشاركته مع الإدارة">نشر نسخة للعرض ⇩</button>
         <button class="btn gold" id="exportBtn" style="display:none;" onclick="exportReport()">تصدير التقرير الكامل ⇩</button>
         <button class="btn" id="resetBtn" style="display:none;" onclick="resetAll()">إعادة ضبط</button>
       </div>
@@ -399,8 +404,8 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         <div class="dropzone" id="dz-sales" data-kind="sales">
           <span class="badge-req">أساسي</span>
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
-          <div class="kind">تقرير تقييم المبيعات</div>
-          <div class="hint">Sales Valuation Report<br>يُستخدم لحساب الربحية وترتيب المبيعات</div>
+          <div class="kind">تقرير ربحية المنتجات</div>
+          <div class="hint">Product Margins Report<br>يُستخدم لحساب الربحية وترتيب المبيعات وتكلفة الوحدة الفعلية</div>
           <input type="file" accept=".xlsx,.xls" />
         </div>
         <div class="dropzone" id="dz-variant" data-kind="variant">
@@ -414,7 +419,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
 
       <div style="text-align:center; margin:22px 0;">
         <button class="btn primary" id="analyzeBtn" disabled onclick="runAnalysis()" style="padding:13px 34px; font-size:13.5px;">تحليل البيانات وعرض اللوحة ◆</button>
-        <div id="analyzeHint" style="color:var(--muted); font-size:11.5px; margin-top:10px;">ارفع تقرير حركة المخزون وتقرير تقييم المبيعات على الأقل للمتابعة</div>
+        <div id="analyzeHint" style="color:var(--muted); font-size:11.5px; margin-top:10px;">ارفع تقرير حركة المخزون وتقرير ربحية المنتجات على الأقل للمتابعة</div>
       </div>
 
       <div class="steps">
@@ -432,6 +437,11 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
           <div class="n">03</div>
           <h3>اعرض وصدّر</h3>
           <p>تصفّح اللوحة التفاعلية، أو صدّر تقريرًا موحّدًا بصيغة Excel جاهزًا لعرضه أمام الإدارة العليا.</p>
+        </div>
+        <div class="card step">
+          <div class="n">04</div>
+          <h3>انشر للإدارة</h3>
+          <p>زر «نشر نسخة للعرض» ينشئ ملف عرض مستقل بنتائج هذا التحليل فقط (بلا أي تقارير خام)، لرفعه بنفس الاسم على رابط ثابت — الإدارة تفتح نفس الرابط دائمًا وترى آخر تحديث نشرته.</p>
         </div>
       </div>
     </section>
@@ -535,6 +545,7 @@ function detectKind(wb){
   const rows = XLSX.utils.sheet_to_json(first, {header:1, range:0, defval:null});
   for(let i=0;i<Math.min(rows.length,5);i++){
     const r = rows[i]||[];
+    if(r.includes('Sold Qty') && r.includes('Total Margins') && r.includes('Margin%')) return 'sales';
     if(r.includes('الكمية في اليد') || r.includes('الاسم')) return 'variant';
   }
   return 'unknown';
@@ -642,7 +653,67 @@ function parsePurchasesFromMovements(wb){
 }
 
 /* ---------------------------------------------------------------- parse: sales valuation -> delivery details */
+/* ---------------------------------------------------------------- parse: sales/profitability source (dispatcher) */
 function parseSalesWorkbook(wb){
+  // Preferred format: "Product Margins" report (flat, one row per product, already
+  // aggregated for the period by Odoo) — gives a cleaner, more reliable picture
+  // than the old Sales Valuation / Delivery Details export.
+  const firstSheetName = wb.SheetNames[0];
+  const firstSheet = wb.Sheets[firstSheetName];
+  const probe = (XLSX.utils.sheet_to_json(firstSheet, {header:1, range:0, defval:null})[0]) || [];
+  if(probe.includes('Sold Qty') && probe.includes('Total Margins') && probe.includes('Margin%')){
+    return parseProductMarginsReport(wb, firstSheetName);
+  }
+  // Backward compatibility: legacy Sales Valuation Report (Delivery Details sheet)
+  if(wb.SheetNames.includes('Delivery Details')){
+    return parseLegacySalesValuation(wb);
+  }
+  return { map:new Map(), periodStartText:null, generatedText:null };
+}
+
+/* ---------------------------------------------------------------- parse: Product Margins report (preferred) */
+function parseProductMarginsReport(wb, sheetName){
+  const sh = wb.Sheets[sheetName];
+  const rows = XLSX.utils.sheet_to_json(sh, {header:1, defval:null});
+  const hdr = rows[0] || [];
+  const col = n => hdr.indexOf(n);
+  const cProd=col('Product'), cSold=col('Sold Qty'), cCost=col('Total Cost'), cSales=col('Total Sales'),
+        cMargin=col('Total Margins'), cAvgCost=col('Avg Cost Price'), cPurchQty=col('Purchased Qty'),
+        cClosing=col('Closing Stock'), cFrom=col('From'), cTo=col('To');
+
+  const map = new Map();
+  let periodStartText=null, periodEndText=null;
+  for(let i=1;i<rows.length;i++){
+    const r = rows[i];
+    if(!r) continue;
+    const rawName = r[cProd];
+    if(!rawName) continue;
+    const name = normName(rawName);
+    if(!name) continue;
+    if(!periodStartText && r[cFrom]) periodStartText = r[cFrom];
+    if(!periodEndText && r[cTo]) periodEndText = r[cTo];
+
+    const qty = toNum(r[cSold]);
+    const costV = toNum(r[cCost]);
+    const saleV = toNum(r[cSales]);
+    const margin = toNum(r[cMargin]);
+    const avgCost = toNum(r[cAvgCost]);
+
+    const cur = map.get(name) || {key:name, name:name, qty:0, costValue:0, saleValue:0, margin:0, orders:null, lastDate:null, avgCostPrice:0, purchasedQtyReport:0, closingStockReport:0};
+    cur.qty += qty;
+    cur.costValue += costV;
+    cur.saleValue += saleV;
+    cur.margin += margin;
+    if(avgCost>0) cur.avgCostPrice = avgCost;
+    cur.purchasedQtyReport += toNum(r[cPurchQty]);
+    cur.closingStockReport += toNum(r[cClosing]);
+    map.set(name, cur);
+  }
+  return { map, periodStartText, generatedText: periodEndText };
+}
+
+/* ---------------------------------------------------------------- parse: legacy Sales Valuation report (fallback) */
+function parseLegacySalesValuation(wb){
   const sh = wb.Sheets['Delivery Details'];
   const map = new Map();
   let periodStartText=null, generatedText=null;
@@ -683,7 +754,7 @@ function parseSalesWorkbook(wb){
     // reconcile with the report's own TOTAL row). Cost Value + Margin always does
     // (verified against the sheet's TOTAL line), so it is used as the true sale value.
     const saleV = costV + margin;
-    const cur = map.get(name) || {key:name, name:name, qty:0, costValue:0, saleValue:0, margin:0, orders:new Set(), lastDate:null};
+    const cur = map.get(name) || {key:name, name:name, qty:0, costValue:0, saleValue:0, margin:0, orders:new Set(), lastDate:null, avgCostPrice:0, purchasedQtyReport:0, closingStockReport:0};
     cur.qty += qty;
     cur.costValue += costV;
     cur.saleValue += saleV;
@@ -763,8 +834,9 @@ function mergeAndCompute(){
       row.costValue = s.costValue;
       row.saleValue = s.saleValue;
       row.margin = s.margin;
-      row.orders = s.orders.size;
+      row.orders = (s.orders && typeof s.orders.size === 'number') ? s.orders.size : null;
       row.lastSaleDate = s.lastDate;
+      row.avgCostPriceReport = s.avgCostPrice || null;
     });
   }
 
@@ -830,10 +902,13 @@ function mergeAndCompute(){
     p.marginPct = p.saleValue>0 ? (p.margin/p.saleValue)*100 : null;
 
     // The stock-movement "Unit Cost" often reflects only the raw purchase price.
-    // The sales report's Cost Value already folds in landed/additional costs, so
-    // where we have actual sales we derive a more accurate per-unit cost from it
-    // (Cost Value ÷ Quantity) and use that for stock valuation instead.
-    p.unitCostFromSales = (p.salesQty>1e-9) ? (p.costValue/p.salesQty) : null;
+    // The Product Margins report supplies its own "Avg Cost Price" per unit, which
+    // Odoo computes including landed/additional costs — that's the most reliable
+    // source when available. Failing that, derive it from Cost Value ÷ Quantity
+    // (legacy report format), and only fall back to the stock-movement figure
+    // when no sales-side cost data exists at all.
+    const derivedFromCostQty = (p.salesQty>1e-9) ? (p.costValue/p.salesQty) : null;
+    p.unitCostFromSales = (p.avgCostPriceReport && p.avgCostPriceReport>0) ? p.avgCostPriceReport : derivedFromCostQty;
     p.unitCostEffective = p.unitCostFromSales!==null ? p.unitCostFromSales : p.unitCost;
     p.stockValueEff = p.closing * p.unitCostEffective;
   });
@@ -940,7 +1015,7 @@ function computeKPIs(){
 /* =========================================================================
    FILE HANDLING / UPLOAD
    ========================================================================= */
-const KIND_LABEL = { stock:'تقرير حركة المخزون', sales:'تقرير تقييم المبيعات', variant:'تقرير متغير المنتج' };
+const KIND_LABEL = { stock:'تقرير حركة المخزون', sales:'تقرير ربحية المنتجات', variant:'تقرير متغير المنتج' };
 
 function wireDropzone(kind){
   const dz = document.getElementById('dz-'+kind);
@@ -986,11 +1061,15 @@ function ingestWorkbook(kind, wb, filename){
     const parsed = parseSalesWorkbook(wb);
     STATE.raw.sales = parsed;
     if(!STATE.periodStart && parsed.periodStartText){
-      const d = parseDateLoose(String(parsed.periodStartText).replace('From ',''));
+      let raw = parsed.periodStartText;
+      if(typeof raw === 'string') raw = raw.replace(/^From\s*/i,'');
+      const d = parseDateLoose(raw);
       if(d) STATE.periodStart = d;
     }
     if(!STATE.periodEnd && parsed.generatedText){
-      const d = parseDateLoose(parsed.generatedText);
+      let raw = parsed.generatedText;
+      if(typeof raw === 'string') raw = raw.replace(/^Generated:?\s*/i,'');
+      const d = parseDateLoose(raw);
       if(d) STATE.periodEnd = d;
     }
     markDropzoneDone('sales', filename, parsed.map.size+' مادة مباعة');
@@ -1023,7 +1102,7 @@ function updateAnalyzeButton(){
   btn.disabled = !ready;
   hint.textContent = ready
     ? 'جاهز للتحليل — يمكنك الضغط على الزر أعلاه'
-    : 'ارفع تقرير حركة المخزون وتقرير تقييم المبيعات على الأقل للمتابعة';
+    : 'ارفع تقرير حركة المخزون وتقرير ربحية المنتجات على الأقل للمتابعة';
 }
 
 ['stock','sales','variant'].forEach(wireDropzone);
@@ -1038,9 +1117,16 @@ function runAnalysis(){
     STATE.periodDays = 30;
   }
   mergeAndCompute();
+  finalizeAndRenderAll('تم تحليل '+STATE.products.length+' مادة بنجاح');
+}
 
+/** Shared tail-end used both after a fresh upload+analysis and after loading a
+ *  published snapshot: unlocks the nav, shows the period/action controls, and
+ *  renders every view. */
+function finalizeAndRenderAll(toastMsg){
   document.querySelectorAll('.nav-btn[data-view]').forEach(b=> b.disabled=false );
   document.getElementById('exportBtn').style.display='inline-flex';
+  document.getElementById('publishBtn').style.display='inline-flex';
   document.getElementById('resetBtn').style.display='inline-flex';
 
   const pb = document.getElementById('periodBadge');
@@ -1052,6 +1138,15 @@ function runAnalysis(){
       ' ('+STATE.periodDays+' يوم)';
   }
 
+  if(STATE.snapshotGeneratedAt){
+    const sb = document.getElementById('snapshotBadge');
+    sb.style.display='flex';
+    document.getElementById('snapshotText').textContent =
+      STATE.snapshotGeneratedAt.toLocaleDateString('en-GB',{year:'numeric',month:'2-digit',day:'2-digit'})+' '+
+      STATE.snapshotGeneratedAt.toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});
+  }
+
+  chartDefaults();
   safeRender('overview', renderOverview);
   safeRender('turnover', renderTurnover);
   safeRender('sales', renderSales);
@@ -1060,7 +1155,67 @@ function runAnalysis(){
   safeRender('advice', renderAdvice);
 
   navigateTo('overview');
-  showToast('تم تحليل '+STATE.products.length+' مادة بنجاح');
+  if(toastMsg) showToast(toastMsg);
+}
+
+/** Restores a previously computed dataset from an embedded/uploaded snapshot
+ *  (no source Odoo reports needed) — used for the read-only "viewer" file
+ *  shared with management. */
+function loadSnapshot(snap){
+  STATE.products = snap.products || [];
+  STATE.kpis = snap.kpis || {};
+  STATE.periodStart = snap.periodStart ? new Date(snap.periodStart) : null;
+  STATE.periodEnd = snap.periodEnd ? new Date(snap.periodEnd) : null;
+  STATE.periodDays = snap.periodDays || 30;
+  STATE.snapshotGeneratedAt = snap.generatedAt ? new Date(snap.generatedAt) : null;
+  finalizeAndRenderAll(null);
+}
+
+/** Builds a standalone, self-contained "viewer" HTML file with the current
+ *  analysis baked in as static data — no source reports included, no upload
+ *  step required. Intended to be uploaded (same filename, overwritten each
+ *  period) to a static host (e.g. GitHub Pages) so management always opens
+ *  the same link while the content underneath is refreshed periodically. */
+function publishSnapshot(){
+  if(!STATE.products || !STATE.products.length){
+    showToast('لا توجد بيانات محلّلة لنشرها بعد');
+    return;
+  }
+  try{
+    const snapshot = {
+      generatedAt: new Date().toISOString(),
+      periodStart: STATE.periodStart ? STATE.periodStart.toISOString() : null,
+      periodEnd: STATE.periodEnd ? STATE.periodEnd.toISOString() : null,
+      periodDays: STATE.periodDays,
+      products: STATE.products,
+      kpis: STATE.kpis,
+    };
+    let json = JSON.stringify(snapshot);
+    json = json.replace(/</g, '\\u003c'); // guard against premature script-closing if any text field contains a tag
+
+    let html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+    // strip any previously embedded snapshot (in case this file was itself opened from an earlier published snapshot)
+    html = html.replace(/<script id="wahaj-snapshot"[^>]*>[\s\S]*?<\/script>\s*/g, '');
+    html = html.replace(/<script>\(function\(\)\{var el=document\.getElementById\("wahaj-snapshot"\)[\s\S]*?<\/script>\s*/g, '');
+    const inject =
+      '<script id="wahaj-snapshot" type="application/json">' + json + '<\/script>\n' +
+      '<script>(function(){var el=document.getElementById("wahaj-snapshot"); if(el){ try{ loadSnapshot(JSON.parse(el.textContent)); }catch(e){ console.error("Snapshot load failed:", e); } } })();<\/script>\n';
+    html = html.replace('</body>', inject + '</body>');
+
+    const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'لوحة_وهج_الماسة_عرض.html';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url), 4000);
+    showToast('تم إنشاء نسخة العرض — ارفعها بنفس الاسم إلى GitHub لتحديث الرابط');
+  }catch(err){
+    console.error(err);
+    showToast('تعذّر إنشاء نسخة العرض: '+err.message);
+  }
 }
 
 /** Runs a view renderer in isolation so a failure in one view (e.g. a chart)
@@ -1369,7 +1524,7 @@ function renderOverview(){
 function renderTurnover(){
   const el = document.getElementById('view-turnover');
   el.innerHTML = `
-    <div class="note-box">يُحسب معدل الدوران السنوي = (كمية الصادر ÷ متوسط المخزون) × (365 ÷ أيام التوفر الفعلية). التصنيف: <b>سريع</b> ≥ 12 دورة/سنة، <b>متوسط</b> 4–12، <b>بطيء</b> 1–4، <b>متلكئ</b> أقل من دورة واحدة سنويًا. للمواد التي رصيدها الافتتاحي = صفر، تُحسب «أيام التوفر» من تاريخ أول عملية شراء فعلية للمادة حتى نهاية الفترة (بدل كامل مدة التقرير) لتجنّب تسجيل دوران منخفض وهمي لمادة لم تكن متوفرة أصلًا طوال الفترة. تكلفة الوحدة تُعتمد من تقرير المبيعات (تكلفة ÷ كمية مباعة) عند توفرها لأنها تشمل التكاليف المضافة على سعر الشراء، وإلا فمن تقرير حركة المخزون.</div>
+    <div class="note-box">يُحسب معدل الدوران السنوي = (كمية الصادر ÷ متوسط المخزون) × (365 ÷ أيام التوفر الفعلية). التصنيف: <b>سريع</b> ≥ 12 دورة/سنة، <b>متوسط</b> 4–12، <b>بطيء</b> 1–4، <b>متلكئ</b> أقل من دورة واحدة سنويًا. للمواد التي رصيدها الافتتاحي = صفر، تُحسب «أيام التوفر» من تاريخ أول عملية شراء فعلية للمادة حتى نهاية الفترة (بدل كامل مدة التقرير) لتجنّب تسجيل دوران منخفض وهمي لمادة لم تكن متوفرة أصلًا طوال الفترة. تكلفة الوحدة تُعتمد من «متوسط تكلفة الوحدة» بتقرير ربحية المنتجات عند توفرها لأنها تشمل التكاليف المضافة على سعر الشراء، وإلا فمن تقرير حركة المخزون.</div>
     <div id="turnoverTable"></div>
   `;
   const columns = [
