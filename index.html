@@ -475,6 +475,12 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
    Parsing + computation + rendering. Runs entirely client-side.
    ========================================================================= */
 
+// Captured immediately, before any view is rendered or the DOM is otherwise
+// mutated, so publishSnapshot() always builds from a known-clean copy of the
+// page instead of re-serializing a live DOM that may differ subtly from the
+// original source (rendered tables/canvases/etc.).
+const PRISTINE_HTML = document.documentElement.outerHTML;
+
 const STATE = {
   files: { stock:null, sales:null, variant:null },
   raw:   { stock:null, sales:null, variant:null },
@@ -1193,19 +1199,6 @@ function publishSnapshot(){
     return;
   }
   try{
-    // Remove any previously embedded snapshot from the LIVE DOM first (if this file
-    // was itself opened from an earlier published snapshot). This is done via safe
-    // DOM APIs — NOT text/regex matching — because our own source code below
-    // literally contains strings like "</body>" and "wahaj-snapshot" as plain text,
-    // and naive text matching against the full captured page would match those
-    // instead of the real tags, corrupting the output.
-    const oldSnap = document.getElementById('wahaj-snapshot');
-    if(oldSnap){
-      const next = oldSnap.nextElementSibling;
-      if(next && next.tagName==='SCRIPT' && /wahaj-snapshot/.test(next.textContent||'')) next.remove();
-      oldSnap.remove();
-    }
-
     const snapshot = {
       generatedAt: new Date().toISOString(),
       periodStart: STATE.periodStart ? STATE.periodStart.toISOString() : null,
@@ -1217,18 +1210,42 @@ function publishSnapshot(){
     let json = JSON.stringify(snapshot);
     json = json.replace(/</g, '\\u003c'); // guard against premature script-closing if any text field contains a tag
 
-    let html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+    const startMarker = '<!--WAHAJ_SNAPSHOT_START-->';
+    const endMarker = '<!--WAHAJ_SNAPSHOT_END-->';
+    // What a REAL, previously-evaluated embedded block looks like right after the
+    // start marker (an actual newline + real markup). Our own source code below
+    // also mentions these marker strings as plain text, but only as JS string
+    // literals spread across multiple lines/quotes — it can never match this exact
+    // evaluated snippet, which is what lets us tell the two apart safely.
+    const realStartSnippet = startMarker + '\n<script id="wahaj-snapshot" type="application/json">';
 
-    const inject =
+    // Build from the pristine, unmutated copy of the page captured at load time
+    // (not the live DOM, which may have since been rendered into and could
+    // serialize subtly differently).
+    let base = PRISTINE_HTML.startsWith('<!DOCTYPE') ? PRISTINE_HTML : ('<!DOCTYPE html>\n' + PRISTINE_HTML);
+
+    // If this file was itself opened from an earlier published snapshot, strip that
+    // real embedded block (searching from the end, since a real block — if present —
+    // always sits after our own source-code's self-mention of these marker strings).
+    const candidateStart = base.lastIndexOf(startMarker);
+    if(candidateStart !== -1 && base.startsWith(realStartSnippet, candidateStart)){
+      const candidateEnd = base.indexOf(endMarker, candidateStart);
+      if(candidateEnd !== -1){
+        base = base.slice(0, candidateStart) + base.slice(candidateEnd + endMarker.length);
+      }
+    }
+
+    const inject = startMarker + '\n' +
       '<script id="wahaj-snapshot" type="application/json">' + json + '<\/script>\n' +
-      '<script>(function(){var el=document.getElementById("wahaj-snapshot"); if(el){ try{ loadSnapshot(JSON.parse(el.textContent)); }catch(e){ console.error("Snapshot load failed:", e); } } })();<\/script>\n';
+      '<script>(function(){var el=document.getElementById("wahaj-snapshot"); if(el){ try{ loadSnapshot(JSON.parse(el.textContent)); }catch(e){ console.error("Snapshot load failed:", e); } } })();<\/script>\n' +
+      endMarker + '\n';
 
     // Anchor to the LAST occurrence of "</body>" — guaranteed to be the real closing
-    // tag, since our own source text (now embedded in the captured page) mentions
-    // that same string earlier as plain text and a naive first-match would corrupt
-    // the file by splicing into the middle of our own script block.
-    const idx = html.lastIndexOf('</body>');
-    html = (idx !== -1) ? (html.slice(0, idx) + inject + html.slice(idx)) : (html + inject);
+    // tag, since our own source text (embedded in the page) mentions that same
+    // string earlier as plain text and a first-match would corrupt the file by
+    // splicing into the middle of our own script block.
+    const idx = base.lastIndexOf('</body>');
+    const html = (idx !== -1) ? (base.slice(0, idx) + inject + base.slice(idx)) : (base + inject);
 
     const blob = new Blob([html], {type:'text/html;charset=utf-8'});
     const url = URL.createObjectURL(blob);
