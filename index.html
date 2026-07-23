@@ -1406,7 +1406,27 @@ function DataTable(container, opts){
 
     const search = container.querySelector('[data-role=search]');
     if(search){
-      search.addEventListener('input', e=>{ state.query = e.target.value; state.page=1; render(); });
+      search.addEventListener('input', e=>{
+        const val = e.target.value;
+        const cursorPos = e.target.selectionStart;
+        clearTimeout(search._debounce);
+        // Debounce the actual re-render: rebuilding the table replaces the <input>
+        // DOM node itself (via innerHTML), which drops keyboard focus — without
+        // debouncing, every keystroke would force the user to click back into the
+        // field before typing the next character. Waiting for a short pause in
+        // typing keeps the field stable and responsive while the user is actively
+        // typing, and still filters live shortly after.
+        search._debounce = setTimeout(()=>{
+          state.query = val;
+          state.page = 1;
+          render();
+          const newSearch = container.querySelector('[data-role=search]');
+          if(newSearch){
+            newSearch.focus();
+            try{ newSearch.setSelectionRange(cursorPos, cursorPos); }catch(err){}
+          }
+        }, 220);
+      });
     }
     const pagesizeSel = container.querySelector('[data-role=pagesize]');
     if(pagesizeSel){
