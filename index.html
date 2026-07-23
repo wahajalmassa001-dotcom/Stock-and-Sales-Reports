@@ -221,13 +221,14 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   .summary-text{
     background:linear-gradient(90deg, color-mix(in srgb, var(--accent) 07%, transparent), color-mix(in srgb, var(--gold) 05%, transparent));
     border:1px solid var(--line); border-radius:var(--radius);
-    padding:18px 22px; margin-bottom:20px; line-height:2; font-size:13.5px; color:#D9E2EC;
+    padding:18px 22px; margin-bottom:20px; line-height:2; font-size:13.5px; color:var(--text);
   }
   .summary-text b{color:var(--accent);}
 
   /* ---------- upload view ---------- */
-  .drop-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin-bottom:18px;}
-  @media (max-width:1000px){.drop-grid{grid-template-columns:1fr;}}
+  .drop-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:18px;}
+  @media (max-width:1250px){.drop-grid{grid-template-columns:repeat(2,1fr);}}
+  @media (max-width:640px){.drop-grid{grid-template-columns:1fr;}}
   .dropzone{
     border:1.5px dashed var(--line); border-radius:var(--radius); padding:22px 18px;
     background:var(--panel); text-align:center; cursor:pointer; transition:border-color .15s, background .15s;
@@ -308,7 +309,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   .tabs{display:flex; gap:6px; margin-bottom:16px; border-bottom:1px solid var(--line); padding-bottom:0;}
   .tab-btn{background:transparent; border:none; color:var(--muted); font-family:inherit; font-size:13px; font-weight:700; padding:10px 16px; cursor:pointer; border-bottom:2px solid transparent;}
   .tab-btn.active{color:var(--accent); border-color:var(--accent);}
-  .note-box{background:color-mix(in srgb, var(--gold) 06%, transparent); border:1px solid color-mix(in srgb, var(--gold) 25%, transparent); border-radius:10px; padding:12px 16px; font-size:12px; color:#E4D2A6; margin-bottom:16px; line-height:1.9;}
+  .note-box{background:color-mix(in srgb, var(--gold) 06%, transparent); border:1px solid color-mix(in srgb, var(--gold) 25%, transparent); border-radius:10px; padding:12px 16px; font-size:12px; color:color-mix(in srgb, var(--gold) 55%, var(--text) 45%); margin-bottom:16px; line-height:1.9;}
 
   .toast{
     position:fixed; bottom:22px; left:50%; transform:translateX(-50%);
@@ -362,6 +363,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       <div class="status-pill"><span class="dot" id="dotStock"></span> حركة المخزون</div>
       <div class="status-pill"><span class="dot" id="dotSales"></span> ربحية المنتجات</div>
       <div class="status-pill"><span class="dot" id="dotVariant"></span> متغير المنتج (اختياري)</div>
+      <div class="status-pill"><span class="dot" id="dotSalesOrders"></span> عدد الطلبات (اختياري)</div>
       <div class="theme-switch" id="themeSwitch" title="تبديل المظهر">
         <span class="theme-dot active" data-theme-btn="diamond" title="الماسة الليلية"></span>
         <span class="theme-dot" data-theme-btn="emerald" title="زمرد الليل"></span>
@@ -415,6 +417,13 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
           <div class="hint">Product Variant Snapshot<br>يُثري البيانات بالرصيد الحالي والكميات المحجوزة</div>
           <input type="file" accept=".xlsx,.xls" />
         </div>
+        <div class="dropzone" id="dz-salesOrders" data-kind="salesOrders">
+          <span class="badge-opt">اختياري</span>
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+          <div class="kind">تقرير تقييم المبيعات (القديم)</div>
+          <div class="hint">Sales Valuation Report<br>يُستخدم فقط لإضافة «عدد الطلبات» لكل مادة، مكمّلًا لتقرير ربحية المنتجات</div>
+          <input type="file" accept=".xlsx,.xls" />
+        </div>
       </div>
 
       <div style="text-align:center; margin:22px 0;">
@@ -426,7 +435,7 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         <div class="card step">
           <div class="n">01</div>
           <h3>ارفع تقارير الفترة</h3>
-          <p>اسحب أو اختر ملفات Odoo الثلاثة الخاصة بالفترة المطلوبة — سابقة كانت أو حديثة. النظام يتعرّف على نوع كل ملف تلقائيًا.</p>
+          <p>اسحب أو اختر ملفات Odoo الخاصة بالفترة المطلوبة (حتى 4 ملفات) — سابقة كانت أو حديثة. النظام يتعرّف على نوع كل ملف تلقائيًا.</p>
         </div>
         <div class="card step">
           <div class="n">02</div>
@@ -546,7 +555,7 @@ function parseDateLoose(v){
 function detectKind(wb){
   const names = wb.SheetNames;
   if(names.includes('Stock Movements') && names.includes('Summary')) return 'stock';
-  if(names.includes('Delivery Details')) return 'sales';
+  if(names.includes('Delivery Details')) return 'legacySalesFormat';
   const first = wb.Sheets[names[0]];
   const rows = XLSX.utils.sheet_to_json(first, {header:1, range:0, defval:null});
   for(let i=0;i<Math.min(rows.length,5);i++){
@@ -865,6 +874,16 @@ function mergeAndCompute(){
     if(row) row.variant = v;
   });
 
+  // Optional supplement: backfill per-product order counts from the legacy Sales
+  // Valuation report, since the Product Margins report doesn't provide them.
+  const salesOrdersMap = STATE._salesOrdersMap || new Map();
+  salesOrdersMap.forEach((s, key)=>{
+    const row = master.get(key);
+    if(row && s.orders && typeof s.orders.size === 'number'){
+      row.orders = s.orders.size;
+    }
+  });
+
   let list = Array.from(master.values());
 
   // ---- drop products with zero activity across every field (nothing to report on)
@@ -1032,7 +1051,7 @@ function computeKPIs(){
 /* =========================================================================
    FILE HANDLING / UPLOAD
    ========================================================================= */
-const KIND_LABEL = { stock:'تقرير حركة المخزون', sales:'تقرير ربحية المنتجات', variant:'تقرير متغير المنتج' };
+const KIND_LABEL = { stock:'تقرير حركة المخزون', sales:'تقرير ربحية المنتجات', variant:'تقرير متغير المنتج', salesOrders:'تقرير تقييم المبيعات (عدد الطلبات)' };
 
 function wireDropzone(kind){
   const dz = document.getElementById('dz-'+kind);
@@ -1056,7 +1075,16 @@ function handleFile(file, expectedKind){
       const data = new Uint8Array(e.target.result);
       const wb = XLSX.read(data, {type:'array', cellDates:true});
       const detected = detectKind(wb);
-      const kind = (detected==='unknown') ? expectedKind : detected;
+      let kind;
+      if(detected === 'legacySalesFormat'){
+        // Ambiguous: the old Sales Valuation (Delivery Details) format can serve as
+        // either the primary sales source (legacy workflow) or as a supplemental
+        // source for per-order counts only (new workflow, alongside Product
+        // Margins). Which role it plays depends on which dropzone it was placed in.
+        kind = (expectedKind === 'salesOrders') ? 'salesOrders' : 'sales';
+      } else {
+        kind = (detected==='unknown') ? expectedKind : detected;
+      }
       ingestWorkbook(kind, wb, file.name);
     }catch(err){
       console.error(err);
@@ -1093,6 +1121,12 @@ function ingestWorkbook(kind, wb, filename){
   } else if(kind==='variant'){
     STATE._variantMap = parseVariantWorkbook(wb);
     markDropzoneDone('variant', filename, STATE._variantMap.size+' مادة');
+  } else if(kind==='salesOrders'){
+    // Legacy Sales Valuation report used purely to backfill per-product order
+    // counts alongside the Product Margins report (which doesn't provide them).
+    const parsed = parseLegacySalesValuation(wb);
+    STATE._salesOrdersMap = parsed.map;
+    markDropzoneDone('salesOrders', filename, parsed.map.size+' مادة');
   } else {
     showToast('لم يتم التعرف على نوع الملف: '+filename);
     return;
@@ -1100,10 +1134,12 @@ function ingestWorkbook(kind, wb, filename){
   updateAnalyzeButton();
 }
 
+const OPTIONAL_KINDS = new Set(['variant','salesOrders']);
 function markDropzoneDone(kind, filename, metaText){
   const dz = document.getElementById('dz-'+kind);
+  const isOptional = OPTIONAL_KINDS.has(kind);
   dz.classList.add('done');
-  dz.innerHTML = '<span class="'+(kind==='variant'?'badge-opt':'badge-req')+'">'+(kind==='variant'?'اختياري':'أساسي')+'</span>'+
+  dz.innerHTML = '<span class="'+(isOptional?'badge-opt':'badge-req')+'">'+(isOptional?'اختياري':'أساسي')+'</span>'+
     '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="color:var(--good)"><path d="M20 6 9 17l-5-5"/></svg>'+
     '<div class="kind">'+KIND_LABEL[kind]+'</div>'+
     '<div class="filename">'+esc(filename)+'</div>'+
@@ -1122,7 +1158,7 @@ function updateAnalyzeButton(){
     : 'ارفع تقرير حركة المخزون وتقرير ربحية المنتجات على الأقل للمتابعة';
 }
 
-['stock','sales','variant'].forEach(wireDropzone);
+['stock','sales','variant','salesOrders'].forEach(wireDropzone);
 
 /* =========================================================================
    RUN ANALYSIS + NAV
@@ -1272,7 +1308,7 @@ function safeRender(viewName, fn){
     console.error('renderView failed:', viewName, err);
     const el = document.getElementById('view-'+viewName);
     if(el){
-      el.innerHTML = '<div class="note-box" style="border-color:rgba(232,97,92,.4); background:rgba(232,97,92,.08); color:#F3B9B6;">'+
+      el.innerHTML = '<div class="note-box" style="border-color:color-mix(in srgb, var(--bad) 40%, transparent); background:color-mix(in srgb, var(--bad) 08%, transparent); color:color-mix(in srgb, var(--bad) 55%, var(--text) 45%);">'+
         'تعذّر عرض هذا القسم بسبب خطأ غير متوقع: <span class="num">'+esc(err.message||err)+'</span>. '+
         'باقي أقسام اللوحة تعمل بشكل طبيعي — يمكنك المحاولة مجددًا بالضغط على «إعادة ضبط» وإعادة رفع الملفات.</div>';
     }
@@ -1563,7 +1599,7 @@ function renderOverview(){
     { key:'turnoverClass', label:'دوران المخزون', format:v=>classBadge(v) },
     { key:'marginPct', label:'الربحية', align:'left', format:v=>fmtPct(v) },
     { key:'severity', label:'الأولوية', format:v=>sevBadge(v) },
-    { key:'advice', label:'التوصية الإدارية', wrap:true, format:v=>'<span style="color:#D9E2EC">'+esc(v)+'</span>' },
+    { key:'advice', label:'التوصية الإدارية', wrap:true, format:v=>'<span style="color:var(--text)">'+esc(v)+'</span>' },
   ];
   const sevOrder = {bad:0, warn:1, good:2, info:3};
   adviceColumns.find(c=>c.key==='severity').sortVal = r=>sevOrder[r.severity];
@@ -1795,7 +1831,7 @@ function renderAdvice(){
     { key:'salesRank', label:'ترتيب المبيعات', format:v=>rankBadge(v) },
     { key:'marginPct', label:'الربحية', align:'left', format:v=>fmtPct(v) },
     { key:'severity', label:'الأولوية', format:v=>sevBadge(v) },
-    { key:'advice', label:'التوصية الإدارية', wrap:true, format:v=>'<span style="color:#D9E2EC">'+esc(v)+'</span>' },
+    { key:'advice', label:'التوصية الإدارية', wrap:true, format:v=>'<span style="color:var(--text)">'+esc(v)+'</span>' },
   ];
   const sevOrder = {bad:0, warn:1, good:2, info:3};
   DataTable(document.getElementById('adviceTable'), {
