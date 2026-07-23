@@ -910,7 +910,18 @@ function mergeAndCompute(){
     const derivedFromCostQty = (p.salesQty>1e-9) ? (p.costValue/p.salesQty) : null;
     p.unitCostFromSales = (p.avgCostPriceReport && p.avgCostPriceReport>0) ? p.avgCostPriceReport : derivedFromCostQty;
     p.unitCostEffective = p.unitCostFromSales!==null ? p.unitCostFromSales : p.unitCost;
-    p.stockValueEff = p.closing * p.unitCostEffective;
+
+    // Stock valuation: prefer the Product Variant report's own "Total cost on hand"
+    // (a direct, authoritative figure computed by Odoo for the current on-hand
+    // quantity) over recomputing closing-qty × unit-cost ourselves, which can drift
+    // from reality since it combines figures from two separate reports.
+    if(p.variant && p.variant.totalCostOnHand !== null && p.variant.totalCostOnHand !== undefined){
+      p.stockValueEff = p.variant.totalCostOnHand;
+      p.stockValueSource = 'variant';
+    } else {
+      p.stockValueEff = p.closing * p.unitCostEffective;
+      p.stockValueSource = 'computed';
+    }
   });
 
   // ---- sales rank (terciles) among products that actually have saleValue movement, by saleValue desc
@@ -1182,6 +1193,19 @@ function publishSnapshot(){
     return;
   }
   try{
+    // Remove any previously embedded snapshot from the LIVE DOM first (if this file
+    // was itself opened from an earlier published snapshot). This is done via safe
+    // DOM APIs — NOT text/regex matching — because our own source code below
+    // literally contains strings like "</body>" and "wahaj-snapshot" as plain text,
+    // and naive text matching against the full captured page would match those
+    // instead of the real tags, corrupting the output.
+    const oldSnap = document.getElementById('wahaj-snapshot');
+    if(oldSnap){
+      const next = oldSnap.nextElementSibling;
+      if(next && next.tagName==='SCRIPT' && /wahaj-snapshot/.test(next.textContent||'')) next.remove();
+      oldSnap.remove();
+    }
+
     const snapshot = {
       generatedAt: new Date().toISOString(),
       periodStart: STATE.periodStart ? STATE.periodStart.toISOString() : null,
@@ -1194,13 +1218,17 @@ function publishSnapshot(){
     json = json.replace(/</g, '\\u003c'); // guard against premature script-closing if any text field contains a tag
 
     let html = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
-    // strip any previously embedded snapshot (in case this file was itself opened from an earlier published snapshot)
-    html = html.replace(/<script id="wahaj-snapshot"[^>]*>[\s\S]*?<\/script>\s*/g, '');
-    html = html.replace(/<script>\(function\(\)\{var el=document\.getElementById\("wahaj-snapshot"\)[\s\S]*?<\/script>\s*/g, '');
+
     const inject =
       '<script id="wahaj-snapshot" type="application/json">' + json + '<\/script>\n' +
       '<script>(function(){var el=document.getElementById("wahaj-snapshot"); if(el){ try{ loadSnapshot(JSON.parse(el.textContent)); }catch(e){ console.error("Snapshot load failed:", e); } } })();<\/script>\n';
-    html = html.replace('</body>', inject + '</body>');
+
+    // Anchor to the LAST occurrence of "</body>" — guaranteed to be the real closing
+    // tag, since our own source text (now embedded in the captured page) mentions
+    // that same string earlier as plain text and a naive first-match would corrupt
+    // the file by splicing into the middle of our own script block.
+    const idx = html.lastIndexOf('</body>');
+    html = (idx !== -1) ? (html.slice(0, idx) + inject + html.slice(idx)) : (html + inject);
 
     const blob = new Blob([html], {type:'text/html;charset=utf-8'});
     const url = URL.createObjectURL(blob);
@@ -1524,7 +1552,7 @@ function renderOverview(){
 function renderTurnover(){
   const el = document.getElementById('view-turnover');
   el.innerHTML = `
-    <div class="note-box">يُحسب معدل الدوران السنوي = (كمية الصادر ÷ متوسط المخزون) × (365 ÷ أيام التوفر الفعلية). التصنيف: <b>سريع</b> ≥ 12 دورة/سنة، <b>متوسط</b> 4–12، <b>بطيء</b> 1–4، <b>متلكئ</b> أقل من دورة واحدة سنويًا. للمواد التي رصيدها الافتتاحي = صفر، تُحسب «أيام التوفر» من تاريخ أول عملية شراء فعلية للمادة حتى نهاية الفترة (بدل كامل مدة التقرير) لتجنّب تسجيل دوران منخفض وهمي لمادة لم تكن متوفرة أصلًا طوال الفترة. تكلفة الوحدة تُعتمد من «متوسط تكلفة الوحدة» بتقرير ربحية المنتجات عند توفرها لأنها تشمل التكاليف المضافة على سعر الشراء، وإلا فمن تقرير حركة المخزون.</div>
+    <div class="note-box">يُحسب معدل الدوران السنوي = (كمية الصادر ÷ متوسط المخزون) × (365 ÷ أيام التوفر الفعلية). التصنيف: <b>سريع</b> ≥ 12 دورة/سنة، <b>متوسط</b> 4–12، <b>بطيء</b> 1–4، <b>متلكئ</b> أقل من دورة واحدة سنويًا. للمواد التي رصيدها الافتتاحي = صفر، تُحسب «أيام التوفر» من تاريخ أول عملية شراء فعلية للمادة حتى نهاية الفترة (بدل كامل مدة التقرير) لتجنّب تسجيل دوران منخفض وهمي لمادة لم تكن متوفرة أصلًا طوال الفترة. تكلفة الوحدة تُعتمد من «متوسط تكلفة الوحدة» بتقرير ربحية المنتجات عند توفرها لأنها تشمل التكاليف المضافة على سعر الشراء، وإلا فمن تقرير حركة المخزون. <b>قيمة المخزون</b> تُؤخذ مباشرة من حقل «Total cost on hand» بتقرير متغير المنتج عند توفره (الأدق لأنه رقم فعلي من أودو)، وإلا فتُحسب (الرصيد الختامي × تكلفة الوحدة).</div>
     <div id="turnoverTable"></div>
   `;
   const columns = [
