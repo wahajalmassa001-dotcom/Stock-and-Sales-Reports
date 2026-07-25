@@ -508,6 +508,16 @@ function normName(s){
   t = t.replace(/\s+/g,' ').trim();
   return t;
 }
+/** Finds a column by trying several known alias names in order (Odoo has renamed
+ *  some export columns between report versions — e.g. "Unit Cost" → "Avg Cost",
+ *  "Unit Value" → "Running Avg Cost") so parsing keeps working across versions. */
+function pickCol(hdr, ...aliases){
+  for(const name of aliases){
+    const i = hdr.indexOf(name);
+    if(i !== -1) return i;
+  }
+  return -1;
+}
 function toNum(v){
   if(v===null || v===undefined || v==='') return 0;
   const n = Number(v);
@@ -607,7 +617,7 @@ function parseStockWorkbook(wb){
     const cCat=col('Product Category'), cBrand=col('Brand'), cRef=col('Internal Ref'),
           cProd=col('Product'), cOpen=col('Opening Qty'), cIn=col('In Qty'), cOut=col('Out Qty'),
           cRet=col('SO/PO Returns'), cManu=col('Manufacturing'), cScrap=col('Scrapped'),
-          cAdj=col('Inv Adj'), cClose=col('Closing Qty'), cCost=col('Unit Cost'), cVal=col('Total Value');
+          cAdj=col('Inv Adj'), cClose=col('Closing Qty'), cCost=pickCol(hdr,'Unit Cost','Avg Cost'), cVal=col('Total Value');
 
     for(let i=headerIdx+1;i<rows.length;i++){
       const r = rows[i];
@@ -645,7 +655,7 @@ function parsePurchasesFromMovements(wb){
   if(!sh) return new Map();
   const rows = XLSX.utils.sheet_to_json(sh, {header:1, defval:null});
   const hdr = rows[0]||[];
-  const cProd = hdr.indexOf('Product'), cQty = hdr.indexOf('Qty'), cUnit = hdr.indexOf('Unit Value'),
+  const cProd = hdr.indexOf('Product'), cQty = hdr.indexOf('Qty'), cUnit = pickCol(hdr,'Unit Value','Running Avg Cost'),
         cTType = hdr.indexOf('Transaction Type'), cDate = hdr.indexOf('DATE & Hour');
   const map = new Map();
   for(let i=1;i<rows.length;i++){
@@ -887,6 +897,10 @@ function mergeAndCompute(){
   let list = Array.from(master.values());
 
   // ---- drop products with zero activity across every field (nothing to report on)
+  // Deliberately period-scoped only: opening/closing/movement/sales/purchases all
+  // come from reports scoped to the requested period. The Variant report is a
+  // live/current snapshot (not period-accurate), so it is NOT used to decide
+  // whether a product had any relevance during the period.
   list = list.filter(p=>{
     return Math.abs(p.opening)>1e-9 || Math.abs(p.inQty)>1e-9 || Math.abs(p.outQty)>1e-9 ||
            Math.abs(p.closing)>1e-9 || Math.abs(p.salesQty)>1e-9 || Math.abs(p.saleValue)>1e-9 ||
@@ -936,13 +950,16 @@ function mergeAndCompute(){
     p.unitCostFromSales = (p.avgCostPriceReport && p.avgCostPriceReport>0) ? p.avgCostPriceReport : derivedFromCostQty;
     p.unitCostEffective = p.unitCostFromSales!==null ? p.unitCostFromSales : p.unitCost;
 
-    // Stock valuation: prefer the Product Variant report's own "Total cost on hand"
-    // (a direct, authoritative figure computed by Odoo for the current on-hand
-    // quantity) over recomputing closing-qty × unit-cost ourselves, which can drift
-    // from reality since it combines figures from two separate reports.
-    if(p.variant && p.variant.totalCostOnHand !== null && p.variant.totalCostOnHand !== undefined){
-      p.stockValueEff = p.variant.totalCostOnHand;
-      p.stockValueSource = 'variant';
+    // Stock valuation: use the Stock Movement Summary's own "Total Value" column
+    // (Closing Qty × Avg Cost, computed by Odoo specifically as of THIS report's
+    // period end) as the authoritative figure — verified to sum exactly to the
+    // report's own TOTAL row. The Product Variant report's "Total cost on hand" is
+    // NOT used here because it reflects the CURRENT/live balance at whatever
+    // moment that report was generated, not the balance as of the requested
+    // period's end date, so it can diverge from the true period-end valuation.
+    if(p.stockValue !== null && p.stockValue !== undefined && Math.abs(p.stockValue) > 1e-9){
+      p.stockValueEff = p.stockValue;
+      p.stockValueSource = 'summary';
     } else {
       p.stockValueEff = p.closing * p.unitCostEffective;
       p.stockValueSource = 'computed';
@@ -1625,7 +1642,7 @@ function renderOverview(){
 function renderTurnover(){
   const el = document.getElementById('view-turnover');
   el.innerHTML = `
-    <div class="note-box">يُحسب معدل الدوران السنوي = (كمية الصادر ÷ متوسط المخزون) × (365 ÷ أيام التوفر الفعلية). التصنيف: <b>سريع</b> ≥ 12 دورة/سنة، <b>متوسط</b> 4–12، <b>بطيء</b> 1–4، <b>متلكئ</b> أقل من دورة واحدة سنويًا. للمواد التي رصيدها الافتتاحي = صفر، تُحسب «أيام التوفر» من تاريخ أول عملية شراء فعلية للمادة حتى نهاية الفترة (بدل كامل مدة التقرير) لتجنّب تسجيل دوران منخفض وهمي لمادة لم تكن متوفرة أصلًا طوال الفترة. تكلفة الوحدة تُعتمد من «متوسط تكلفة الوحدة» بتقرير ربحية المنتجات عند توفرها لأنها تشمل التكاليف المضافة على سعر الشراء، وإلا فمن تقرير حركة المخزون. <b>قيمة المخزون</b> تُؤخذ مباشرة من حقل «Total cost on hand» بتقرير متغير المنتج عند توفره (الأدق لأنه رقم فعلي من أودو)، وإلا فتُحسب (الرصيد الختامي × تكلفة الوحدة).</div>
+    <div class="note-box">يُحسب معدل الدوران السنوي = (كمية الصادر ÷ متوسط المخزون) × (365 ÷ أيام التوفر الفعلية). التصنيف: <b>سريع</b> ≥ 12 دورة/سنة، <b>متوسط</b> 4–12، <b>بطيء</b> 1–4، <b>متلكئ</b> أقل من دورة واحدة سنويًا. للمواد التي رصيدها الافتتاحي = صفر، تُحسب «أيام التوفر» من تاريخ أول عملية شراء فعلية للمادة حتى نهاية الفترة (بدل كامل مدة التقرير) لتجنّب تسجيل دوران منخفض وهمي لمادة لم تكن متوفرة أصلًا طوال الفترة. تكلفة الوحدة تُعتمد من «متوسط تكلفة الوحدة» بتقرير ربحية المنتجات عند توفرها لأنها تشمل التكاليف المضافة على سعر الشراء، وإلا فمن تقرير حركة المخزون. <b>قيمة المخزون</b> تُؤخذ مباشرة من عمود «Total Value» بورقة Summary في تقرير حركة المخزون (وهي القيمة الفعلية كما احتسبها أودو حتى نهاية الفترة المحددة تمامًا)؛ لا تُستخدم بيانات تقرير متغير المنتج لهذا الغرض لأنها رصيد حالي/لحظي وليست خاصة بالفترة المطلوبة.</div>
     <div id="turnoverTable"></div>
   `;
   const columns = [
