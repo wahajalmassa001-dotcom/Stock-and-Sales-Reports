@@ -254,8 +254,8 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
   .summary-text b{color:var(--accent);}
 
   /* ---------- upload view ---------- */
-  .drop-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:18px;}
-  @media (max-width:1250px){.drop-grid{grid-template-columns:repeat(2,1fr);}}
+  .drop-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(190px, 1fr)); gap:16px; margin-bottom:18px;}
+  @media (max-width:900px){.drop-grid{grid-template-columns:repeat(2,1fr);}}
   @media (max-width:640px){.drop-grid{grid-template-columns:1fr;}}
   .dropzone{
     border:1.5px dashed var(--line); border-radius:var(--radius); padding:22px 18px;
@@ -384,15 +384,19 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
       <button class="nav-btn" data-view="purchases" disabled>
         <span class="ic">⇩</span> مشتريات الفترة
       </button>
+      <button class="nav-btn" data-view="customers" disabled>
+        <span class="ic">◈</span> تحليل العملاء
+      </button>
       <button class="nav-btn" data-view="advice" disabled>
         <span class="ic">✦</span> النصائح الإدارية
       </button>
     </nav>
     <div class="sidebar-foot">
       <div class="status-pill"><span class="dot" id="dotStock"></span> حركة المخزون</div>
-      <div class="status-pill"><span class="dot" id="dotSales"></span> ربحية المنتجات</div>
+      <div class="status-pill"><span class="dot" id="dotSales"></span> تقييم المبيعات</div>
       <div class="status-pill"><span class="dot" id="dotVariant"></span> متغير المنتج (اختياري)</div>
-      <div class="status-pill"><span class="dot" id="dotSalesOrders"></span> عدد الطلبات (اختياري)</div>
+      <div class="status-pill"><span class="dot" id="dotMarginsEnrich"></span> ربحية المنتجات (اختياري)</div>
+      <div class="status-pill"><span class="dot" id="dotMarginAnalysis"></span> تحليل الأرباح والعملاء (اختياري)</div>
       <div class="theme-switch" id="themeSwitch" title="تبديل المظهر">
         <span class="theme-dot active" data-theme-btn="diamond" title="الماسة الليلية"></span>
         <span class="theme-dot" data-theme-btn="emerald" title="زمرد الليل"></span>
@@ -439,8 +443,8 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
         <div class="dropzone" id="dz-sales" data-kind="sales">
           <span class="badge-req">أساسي</span>
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
-          <div class="kind">تقرير ربحية المنتجات</div>
-          <div class="hint">Product Margins Report<br>يُستخدم لحساب الربحية وترتيب المبيعات وتكلفة الوحدة الفعلية</div>
+          <div class="kind">تقرير تقييم المبيعات</div>
+          <div class="hint">Sales Valuation Report<br>يغطي كل عمليات البيع المسلَّمة، ويُستخدم لحساب الربحية وترتيب المبيعات وعدد الطلبات</div>
           <input type="file" accept=".xlsx,.xls" />
         </div>
         <div class="dropzone" id="dz-variant" data-kind="variant">
@@ -450,18 +454,25 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
           <div class="hint">Product Variant Snapshot<br>يُثري البيانات بالرصيد الحالي والكميات المحجوزة</div>
           <input type="file" accept=".xlsx,.xls" />
         </div>
-        <div class="dropzone" id="dz-salesOrders" data-kind="salesOrders">
+        <div class="dropzone" id="dz-marginsEnrich" data-kind="marginsEnrich">
           <span class="badge-opt">اختياري</span>
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
-          <div class="kind">تقرير تقييم المبيعات (القديم)</div>
-          <div class="hint">Sales Valuation Report<br>يُستخدم فقط لإضافة «عدد الطلبات» لكل مادة، مكمّلًا لتقرير ربحية المنتجات</div>
+          <div class="kind">تقرير ربحية المنتجات</div>
+          <div class="hint">Product Margins Report<br>يُحسّن دقة تكلفة الوحدة للمواد الموجودة به فقط — لا يُعتمد عليه وحده لأنه قد لا يغطي كل المبيعات</div>
+          <input type="file" accept=".xlsx,.xls" />
+        </div>
+        <div class="dropzone" id="dz-marginAnalysis" data-kind="marginAnalysis">
+          <span class="badge-opt">اختياري</span>
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4"><path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+          <div class="kind">تحليل الأرباح</div>
+          <div class="hint">Margin Analysis Report<br>أدق أرقام للربحية عند توفرها لكل مادة، ويفتح قسم «تحليل العملاء» الجديد</div>
           <input type="file" accept=".xlsx,.xls" />
         </div>
       </div>
 
       <div style="text-align:center; margin:22px 0;">
         <button class="btn primary" id="analyzeBtn" disabled onclick="runAnalysis()" style="padding:13px 34px; font-size:13.5px;">تحليل البيانات وعرض اللوحة ◆</button>
-        <div id="analyzeHint" style="color:var(--muted); font-size:11.5px; margin-top:10px;">ارفع تقرير حركة المخزون وتقرير ربحية المنتجات على الأقل للمتابعة</div>
+        <div id="analyzeHint" style="color:var(--muted); font-size:11.5px; margin-top:10px;">ارفع تقرير حركة المخزون وتقرير تقييم المبيعات على الأقل للمتابعة</div>
       </div>
 
       <div class="steps">
@@ -503,6 +514,9 @@ var o=[];var l=Array.isArray(e);for(f=n.s.c;f<=n.e.c;++f)s[f]=ya(f);for(var c=n.
     <!-- ================= VIEW: PURCHASES ================= -->
     <section class="view" id="view-purchases"></section>
 
+    <!-- ================= VIEW: CUSTOMERS ================= -->
+    <section class="view" id="view-customers"></section>
+
     <!-- ================= VIEW: ADVICE ================= -->
     <section class="view" id="view-advice"></section>
 
@@ -528,8 +542,10 @@ const STATE = {
   raw:   { stock:null, sales:null, variant:null },
   periodStart:null, periodEnd:null, periodDays:null,
   products: [],       // merged master list
+  customers: [],      // computed customer profitability list
   purchases: [],      // period purchases per product (from receipts)
   kpis: {},
+  customerKpis: {},
   charts: {},
 };
 
@@ -598,12 +614,19 @@ function parseDateLoose(v){
 function detectKind(wb){
   const names = wb.SheetNames;
   if(names.includes('Stock Movements') && names.includes('Summary')) return 'stock';
-  if(names.includes('Delivery Details')) return 'legacySalesFormat';
+  // Sales Valuation (Delivery Details) is the primary, required sales/profitability
+  // source — it covers every delivered sale line, unlike Product Margins below.
+  if(names.includes('Delivery Details')) return 'sales';
+  // Margin Analysis workbook: two sheets — invoice/customer-level margins, and a
+  // clean, self-reconciling product-level revenue/margin breakdown. Both optional.
+  if(names.includes('Product Wise Margin Analysis') || names.includes('Margin Analysis')) return 'marginAnalysis';
   const first = wb.Sheets[names[0]];
   const rows = XLSX.utils.sheet_to_json(first, {header:1, range:0, defval:null});
   for(let i=0;i<Math.min(rows.length,5);i++){
     const r = rows[i]||[];
-    if(r.includes('Sold Qty') && r.includes('Total Margins') && r.includes('Margin%')) return 'sales';
+    // Product Margins is optional enrichment only (some products it covers can be
+    // missing from it entirely), used to improve unit-cost accuracy where present.
+    if(r.includes('Sold Qty') && r.includes('Total Margins') && r.includes('Margin%')) return 'marginsEnrich';
     if(r.includes('الكمية في اليد') || r.includes('الاسم')) return 'variant';
   }
   return 'unknown';
@@ -711,23 +734,6 @@ function parsePurchasesFromMovements(wb){
 }
 
 /* ---------------------------------------------------------------- parse: sales valuation -> delivery details */
-/* ---------------------------------------------------------------- parse: sales/profitability source (dispatcher) */
-function parseSalesWorkbook(wb){
-  // Preferred format: "Product Margins" report (flat, one row per product, already
-  // aggregated for the period by Odoo) — gives a cleaner, more reliable picture
-  // than the old Sales Valuation / Delivery Details export.
-  const firstSheetName = wb.SheetNames[0];
-  const firstSheet = wb.Sheets[firstSheetName];
-  const probe = (XLSX.utils.sheet_to_json(firstSheet, {header:1, range:0, defval:null})[0]) || [];
-  if(probe.includes('Sold Qty') && probe.includes('Total Margins') && probe.includes('Margin%')){
-    return parseProductMarginsReport(wb, firstSheetName);
-  }
-  // Backward compatibility: legacy Sales Valuation Report (Delivery Details sheet)
-  if(wb.SheetNames.includes('Delivery Details')){
-    return parseLegacySalesValuation(wb);
-  }
-  return { map:new Map(), periodStartText:null, generatedText:null };
-}
 
 /* ---------------------------------------------------------------- parse: Product Margins report (preferred) */
 function parseProductMarginsReport(wb, sheetName){
@@ -768,6 +774,94 @@ function parseProductMarginsReport(wb, sheetName){
     map.set(name, cur);
   }
   return { map, periodStartText, generatedText: periodEndText };
+}
+
+/* ---------------------------------------------------------------- parse: Margin Analysis workbook (product sheet) */
+/** Clean, self-reconciling per-product Revenue/Margin breakdown (no Qty/cost-per-unit
+ *  columns). Used as an optional enrichment layer — when present for a product it
+ *  takes priority for saleValue/margin/costValue accuracy over other sources, since
+ *  it has been verified to reconcile exactly with its own report total. */
+function parseProductWiseMarginAnalysis(wb){
+  const sh = wb.Sheets['Product Wise Margin Analysis'];
+  const map = new Map();
+  if(!sh) return map;
+  const rows = XLSX.utils.sheet_to_json(sh, {header:1, defval:null});
+  let headerIdx = -1;
+  for(let i=0;i<Math.min(rows.length,8);i++){
+    const r = rows[i]||[];
+    if(r[0]==='SR/NO' && r.includes('Revenue') && r.includes('Margin')){ headerIdx=i; break; }
+  }
+  if(headerIdx===-1) return map;
+  const hdr = rows[headerIdx];
+  const col = n => hdr.indexOf(n);
+  const cProd=col('Product Name'), cRev=col('Revenue'), cMargin=col('Margin');
+  for(let i=headerIdx+1;i<rows.length;i++){
+    const r = rows[i];
+    if(!r) continue;
+    if(String(r[0]||'').trim().toUpperCase()==='TOTAL') continue;
+    const rawName = r[cProd];
+    if(!rawName) continue;
+    const name = normName(rawName);
+    if(!name || name==='(No Product)') continue; // fees/adjustments not tied to a product
+    const revenue = toNum(r[cRev]);
+    const margin = toNum(r[cMargin]);
+    const cur = map.get(name) || {key:name, name:name, saleValue:0, margin:0};
+    cur.saleValue += revenue;
+    cur.margin += margin;
+    map.set(name, cur);
+  }
+  return map;
+}
+
+/* ---------------------------------------------------------------- parse: Margin Analysis workbook (invoice/customer sheet) */
+/** Invoice-level revenue/margin per customer — powers the Customer Analysis view.
+ *  Not available from any other report currently supported. */
+function parseCustomerMarginAnalysis(wb){
+  const sh = wb.Sheets['Margin Analysis'];
+  const map = new Map();
+  let periodStartText=null, periodEndText=null;
+  if(!sh) return { map, periodStartText, periodEndText };
+  const rows = XLSX.utils.sheet_to_json(sh, {header:1, defval:null});
+  // period text like "From: 01/01/2026    To: 27/07/2026" sits near the top
+  for(const r of rows.slice(0,4)){
+    if(!r) continue;
+    const cell = r[0];
+    if(typeof cell === 'string' && cell.includes('From:')){
+      const m = cell.match(/From:\s*([\d/]+)\s+To:\s*([\d/]+)/);
+      if(m){ periodStartText = m[1]; periodEndText = m[2]; }
+    }
+  }
+  let headerIdx=-1;
+  for(let i=0;i<Math.min(rows.length,8);i++){
+    const r = rows[i]||[];
+    if(r[0]==='SR/NO' && r.includes('Customer Name') && r.includes('Amount')){ headerIdx=i; break; }
+  }
+  if(headerIdx===-1) return { map, periodStartText, periodEndText };
+  const hdr = rows[headerIdx];
+  const col = n => hdr.indexOf(n);
+  const cCode=col('Customer Code'), cName=col('Customer Name'), cInv=col('INV No'),
+        cDate=col('INV Date'), cAmt=col('Amount'), cMargin=col('Margin');
+  for(let i=headerIdx+1;i<rows.length;i++){
+    const r = rows[i];
+    if(!r) continue;
+    if(String(r[0]||'').trim().toUpperCase()==='TOTAL') continue;
+    const rawName = r[cName];
+    if(!rawName) continue;
+    const code = r[cCode]!==null && r[cCode]!==undefined ? String(r[cCode]) : normName(rawName);
+    const name = normName(rawName);
+    if(!name) continue;
+    const amount = toNum(r[cAmt]);
+    const margin = toNum(r[cMargin]);
+    const cur = map.get(code) || {key:code, name:name, revenue:0, margin:0, invoiceCount:0, firstDate:null, lastDate:null};
+    cur.revenue += amount;
+    cur.margin += margin;
+    cur.invoiceCount += 1;
+    const d = parseDateLoose(r[cDate]);
+    if(d && (!cur.firstDate || d<cur.firstDate)) cur.firstDate = d;
+    if(d && (!cur.lastDate || d>cur.lastDate)) cur.lastDate = d;
+    map.set(code, cur);
+  }
+  return { map, periodStartText, periodEndText };
 }
 
 /* ---------------------------------------------------------------- parse: legacy Sales Valuation report (fallback) */
@@ -917,13 +1011,37 @@ function mergeAndCompute(){
     if(row) row.variant = v;
   });
 
-  // Optional supplement: backfill per-product order counts from the legacy Sales
-  // Valuation report, since the Product Margins report doesn't provide them.
-  const salesOrdersMap = STATE._salesOrdersMap || new Map();
-  salesOrdersMap.forEach((s, key)=>{
+  // Optional enrichment: Product Margins report improves cost/margin accuracy and
+  // unit-cost precision for the specific products it covers. It is NEVER relied on
+  // for coverage — some products can be entirely missing from it — so any product
+  // not already present from the primary Sales Valuation report is left untouched,
+  // keeping its (already reconciled) Sales Valuation-derived figures instead.
+  const marginsEnrichMap = STATE._marginsEnrichMap || new Map();
+  marginsEnrichMap.forEach((m, key)=>{
     const row = master.get(key);
-    if(row && s.orders && typeof s.orders.size === 'number'){
-      row.orders = s.orders.size;
+    if(!row) return;
+    if(Math.abs(m.qty)>1e-9 || Math.abs(m.saleValue)>1e-9 || Math.abs(m.costValue)>1e-9){
+      row.salesQty = m.qty;
+      row.costValue = m.costValue;
+      row.saleValue = m.saleValue;
+      row.margin = m.margin;
+    }
+    if(m.avgCostPrice > 0) row.avgCostPriceReport = m.avgCostPrice;
+  });
+
+  // Highest-priority enrichment: the Margin Analysis workbook's product sheet is
+  // clean and self-reconciling (verified to match its own report total exactly),
+  // so where it covers a product its Revenue/Margin figures take final precedence
+  // over both other sources. It has no quantity column, so salesQty is left as
+  // whatever the earlier steps already established.
+  const marginAnalysisProductMap = STATE._marginAnalysisProductMap || new Map();
+  marginAnalysisProductMap.forEach((m, key)=>{
+    const row = master.get(key);
+    if(!row) return;
+    if(Math.abs(m.saleValue)>1e-9 || Math.abs(m.margin)>1e-9){
+      row.saleValue = m.saleValue;
+      row.margin = m.margin;
+      row.costValue = m.saleValue - m.margin;
     }
   });
 
@@ -1015,6 +1133,56 @@ function mergeAndCompute(){
 
   STATE.products = list;
   computeKPIs();
+  computeCustomers();
+}
+
+/* ---------------------------------------------------------------- customer analysis */
+function computeCustomers(){
+  const customerMap = STATE._customerMap || new Map();
+  const list = Array.from(customerMap.values()).map(c => Object.assign({}, c, {
+    marginPct: c.revenue>0 ? (c.margin/c.revenue)*100 : null,
+    avgInvoiceValue: c.invoiceCount>0 ? c.revenue/c.invoiceCount : 0,
+  }));
+
+  // rank by revenue (terciles) — same approach used for product sales ranking
+  const sorted = list.slice().sort((a,b)=>b.revenue-a.revenue);
+  const n = sorted.length;
+  sorted.forEach((c,i)=>{
+    if(n<=2) c.rank = i===0 ? 'الأعلى قيمة' : 'الأقل قيمة';
+    else if(i < n/3) c.rank = 'الأعلى قيمة';
+    else if(i < 2*n/3) c.rank = 'متوسط القيمة';
+    else c.rank = 'الأقل قيمة';
+  });
+
+  list.forEach(c=>{
+    let advice, severity;
+    if(c.rank==='الأعلى قيمة' && c.marginPct!==null && c.marginPct>=25){
+      advice = 'زبون بقيمة تعامل عالية وهامش ربح ممتاز — يستحق أولوية بالخدمة أو برنامج ولاء خاص.';
+      severity = 'good';
+    } else if(c.marginPct!==null && c.marginPct<10){
+      advice = 'هامش ربح منخفض من هذا الزبون رغم حجم التعامل — يُنصح بمراجعة شروط التسعير أو الخصومات الممنوحة له.';
+      severity = 'warn';
+    } else if(c.rank==='الأقل قيمة'){
+      advice = 'حجم تعامل محدود خلال الفترة — قد يستفيد من متابعة أو عرض ترويجي لزيادة التفاعل.';
+      severity = 'info';
+    } else {
+      advice = 'أداء طبيعي ومستقر مع هذا الزبون.';
+      severity = 'info';
+    }
+    c.advice = advice;
+    c.severity = severity;
+  });
+
+  STATE.customers = list;
+
+  const k = {};
+  k.totalRevenue = list.reduce((s,c)=>s+c.revenue,0);
+  k.totalMargin = list.reduce((s,c)=>s+c.margin,0);
+  k.marginPct = k.totalRevenue>0 ? (k.totalMargin/k.totalRevenue)*100 : 0;
+  k.customerCount = list.length;
+  k.totalInvoices = list.reduce((s,c)=>s+c.invoiceCount,0);
+  k.avgRevenuePerCustomer = k.customerCount>0 ? k.totalRevenue/k.customerCount : 0;
+  STATE.customerKpis = k;
 }
 
 /* ---------------------------------------------------------------- advice engine */
@@ -1101,7 +1269,7 @@ function computeKPIs(){
 /* =========================================================================
    FILE HANDLING / UPLOAD
    ========================================================================= */
-const KIND_LABEL = { stock:'تقرير حركة المخزون', sales:'تقرير ربحية المنتجات', variant:'تقرير متغير المنتج', salesOrders:'تقرير تقييم المبيعات (عدد الطلبات)' };
+const KIND_LABEL = { stock:'تقرير حركة المخزون', sales:'تقرير تقييم المبيعات', variant:'تقرير متغير المنتج', marginsEnrich:'تقرير ربحية المنتجات (إثراء)', marginAnalysis:'تحليل الأرباح (منتجات وعملاء)' };
 
 function wireDropzone(kind){
   const dz = document.getElementById('dz-'+kind);
@@ -1125,16 +1293,7 @@ function handleFile(file, expectedKind){
       const data = new Uint8Array(e.target.result);
       const wb = XLSX.read(data, {type:'array', cellDates:true});
       const detected = detectKind(wb);
-      let kind;
-      if(detected === 'legacySalesFormat'){
-        // Ambiguous: the old Sales Valuation (Delivery Details) format can serve as
-        // either the primary sales source (legacy workflow) or as a supplemental
-        // source for per-order counts only (new workflow, alongside Product
-        // Margins). Which role it plays depends on which dropzone it was placed in.
-        kind = (expectedKind === 'salesOrders') ? 'salesOrders' : 'sales';
-      } else {
-        kind = (detected==='unknown') ? expectedKind : detected;
-      }
+      const kind = (detected==='unknown') ? expectedKind : detected;
       ingestWorkbook(kind, wb, file.name);
     }catch(err){
       console.error(err);
@@ -1153,7 +1312,9 @@ function ingestWorkbook(kind, wb, filename){
     STATE._purchasesMap = parsePurchasesFromMovements(wb);
     markDropzoneDone('stock', filename, parsed.products.length+' مادة');
   } else if(kind==='sales'){
-    const parsed = parseSalesWorkbook(wb);
+    // Primary sales/profitability source: Sales Valuation (Delivery Details) —
+    // covers every delivered sale line, so nothing gets silently missed.
+    const parsed = parseLegacySalesValuation(wb);
     STATE.raw.sales = parsed;
     if(!STATE.periodStart && parsed.periodStartText){
       let raw = parsed.periodStartText;
@@ -1171,12 +1332,30 @@ function ingestWorkbook(kind, wb, filename){
   } else if(kind==='variant'){
     STATE._variantMap = parseVariantWorkbook(wb);
     markDropzoneDone('variant', filename, STATE._variantMap.size+' مادة');
-  } else if(kind==='salesOrders'){
-    // Legacy Sales Valuation report used purely to backfill per-product order
-    // counts alongside the Product Margins report (which doesn't provide them).
-    const parsed = parseLegacySalesValuation(wb);
-    STATE._salesOrdersMap = parsed.map;
-    markDropzoneDone('salesOrders', filename, parsed.map.size+' مادة');
+  } else if(kind==='marginsEnrich'){
+    // Optional enrichment: Product Margins report. Some products can be entirely
+    // absent from it, so it's never relied on as the sole source — only used to
+    // improve unit-cost accuracy for the products it does cover.
+    const parsed = parseProductMarginsReport(wb, wb.SheetNames[0]);
+    STATE._marginsEnrichMap = parsed.map;
+    markDropzoneDone('marginsEnrich', filename, parsed.map.size+' مادة');
+  } else if(kind==='marginAnalysis'){
+    // Optional: one workbook, two payoffs — a cleaner per-product revenue/margin
+    // enrichment (highest priority when present), and invoice-level data per
+    // customer that powers the whole Customer Analysis section.
+    const productMap = parseProductWiseMarginAnalysis(wb);
+    STATE._marginAnalysisProductMap = productMap;
+    const customerParsed = parseCustomerMarginAnalysis(wb);
+    STATE._customerMap = customerParsed.map;
+    if(!STATE.periodStart && customerParsed.periodStartText){
+      const d = parseDateLoose(customerParsed.periodStartText);
+      if(d) STATE.periodStart = d;
+    }
+    if(!STATE.periodEnd && customerParsed.periodEndText){
+      const d = parseDateLoose(customerParsed.periodEndText);
+      if(d) STATE.periodEnd = d;
+    }
+    markDropzoneDone('marginAnalysis', filename, productMap.size+' مادة، '+customerParsed.map.size+' زبون');
   } else {
     showToast('لم يتم التعرف على نوع الملف: '+filename);
     return;
@@ -1184,7 +1363,7 @@ function ingestWorkbook(kind, wb, filename){
   updateAnalyzeButton();
 }
 
-const OPTIONAL_KINDS = new Set(['variant','salesOrders']);
+const OPTIONAL_KINDS = new Set(['variant','marginsEnrich','marginAnalysis']);
 function markDropzoneDone(kind, filename, metaText){
   const dz = document.getElementById('dz-'+kind);
   const isOptional = OPTIONAL_KINDS.has(kind);
@@ -1205,10 +1384,10 @@ function updateAnalyzeButton(){
   btn.disabled = !ready;
   hint.textContent = ready
     ? 'جاهز للتحليل — يمكنك الضغط على الزر أعلاه'
-    : 'ارفع تقرير حركة المخزون وتقرير ربحية المنتجات على الأقل للمتابعة';
+    : 'ارفع تقرير حركة المخزون وتقرير تقييم المبيعات على الأقل للمتابعة';
 }
 
-['stock','sales','variant','salesOrders'].forEach(wireDropzone);
+['stock','sales','variant','marginsEnrich','marginAnalysis'].forEach(wireDropzone);
 
 /* =========================================================================
    RUN ANALYSIS + NAV
@@ -1255,6 +1434,7 @@ function finalizeAndRenderAll(toastMsg){
   safeRender('sales', renderSales);
   safeRender('profit', renderProfit);
   safeRender('purchases', renderPurchases);
+  safeRender('customers', renderCustomers);
   safeRender('advice', renderAdvice);
 
   navigateTo('overview');
@@ -1267,6 +1447,8 @@ function finalizeAndRenderAll(toastMsg){
 function loadSnapshot(snap){
   STATE.products = snap.products || [];
   STATE.kpis = snap.kpis || {};
+  STATE.customers = snap.customers || [];
+  STATE.customerKpis = snap.customerKpis || {};
   STATE.periodStart = snap.periodStart ? new Date(snap.periodStart) : null;
   STATE.periodEnd = snap.periodEnd ? new Date(snap.periodEnd) : null;
   STATE.periodDays = snap.periodDays || 30;
@@ -1292,6 +1474,8 @@ function publishSnapshot(){
       periodDays: STATE.periodDays,
       products: STATE.products,
       kpis: STATE.kpis,
+      customers: STATE.customers,
+      customerKpis: STATE.customerKpis,
     };
     let json = JSON.stringify(snapshot);
     json = json.replace(/</g, '\\u003c'); // guard against premature script-closing if any text field contains a tag
@@ -1384,6 +1568,7 @@ function navigateTo(view){
     sales:['أداء المبيعات','ترتيب المواد حسب حجم المبيعات خلال الفترة'],
     profit:['الربحية','تحليل هامش الربح وقيمته لكل مادة'],
     purchases:['مشتريات الفترة','المواد المستلمة (Receipt) خلال الفترة المحددة وقيمتها'],
+    customers:['تحليل العملاء','ترتيب الزبائن حسب حجم التعامل والربحية خلال الفترة'],
     advice:['النصائح الإدارية','توصيات تشغيلية آلية لكل مادة جاهزة للعرض على الإدارة العليا'],
   };
   document.getElementById('pageTitle').textContent = titles[view][0];
@@ -1414,8 +1599,10 @@ if(sidebarBackdrop) sidebarBackdrop.addEventListener('click', closeMobileSidebar
    ========================================================================= */
 const CLASS_BADGE = { 'سريع':'good', 'متوسط':'info', 'بطيء':'warn', 'متلكئ':'bad', 'لا نشاط':'neutral' };
 const RANK_BADGE = { 'الأعلى مبيعًا':'good', 'المتوسط مبيعًا':'info', 'الأقل مبيعًا':'warn', 'بدون مبيعات بالفترة':'neutral' };
+const CUSTOMER_RANK_BADGE = { 'الأعلى قيمة':'good', 'متوسط القيمة':'info', 'الأقل قيمة':'warn' };
 function classBadge(cls){ return '<span class="badge '+(CLASS_BADGE[cls]||'neutral')+'">'+esc(cls)+'</span>'; }
 function rankBadge(r){ return '<span class="badge '+(RANK_BADGE[r]||'neutral')+'">'+esc(r)+'</span>'; }
+function customerRankBadge(r){ return '<span class="badge '+(CUSTOMER_RANK_BADGE[r]||'neutral')+'">'+esc(r)+'</span>'; }
 function sevBadge(sev){
   const map = {good:['ممتاز','good'], info:['طبيعي','info'], warn:['يستدعي انتباه','warn'], bad:['عاجل','bad']};
   const m = map[sev]||map.info;
@@ -1468,8 +1655,14 @@ function DataTable(container, opts){
       html += '<input class="dt-search" placeholder="'+ (opts.searchPlaceholder||'بحث...') +'" value="'+esc(state.query)+'" data-role="search"/>';
       if(opts.filters){
         html += '<div class="filter-pills">';
+        const baseTotal = (opts.rows||[]).length;
         opts.filters.forEach(f=>{
-          html += '<button class="pill'+(state.filter===f.value?' active':'')+'" data-filter="'+esc(f.value===null?'':f.value)+'">'+esc(f.label)+'</button>';
+          let labelText = esc(f.label);
+          if(opts.showFilterPercent!==false && f.value!==null && opts.filterFn && baseTotal>0){
+            const count = opts.rows.filter(r=>opts.filterFn(r,f.value)).length;
+            labelText += ' <span class="num" style="opacity:.75;">('+Math.round(count/baseTotal*100)+'%)</span>';
+          }
+          html += '<button class="pill'+(state.filter===f.value?' active':'')+'" data-filter="'+esc(f.value===null?'':f.value)+'">'+labelText+'</button>';
         });
         html += '</div>';
       }
@@ -1691,7 +1884,7 @@ function renderOverview(){
 function renderTurnover(){
   const el = document.getElementById('view-turnover');
   el.innerHTML = `
-    <div class="note-box">يُحسب معدل الدوران السنوي = (كمية الصادر ÷ متوسط المخزون) × (365 ÷ أيام التوفر الفعلية). التصنيف: <b>سريع</b> ≥ 12 دورة/سنة، <b>متوسط</b> 4–12، <b>بطيء</b> 1–4، <b>متلكئ</b> أقل من دورة واحدة سنويًا. للمواد التي رصيدها الافتتاحي = صفر، تُحسب «أيام التوفر» من تاريخ أول عملية شراء فعلية للمادة حتى نهاية الفترة (بدل كامل مدة التقرير) لتجنّب تسجيل دوران منخفض وهمي لمادة لم تكن متوفرة أصلًا طوال الفترة. تكلفة الوحدة تُعتمد من «متوسط تكلفة الوحدة» بتقرير ربحية المنتجات عند توفرها لأنها تشمل التكاليف المضافة على سعر الشراء، وإلا فمن تقرير حركة المخزون. <b>قيمة المخزون</b> تُؤخذ مباشرة من عمود «Total Value» بورقة Summary في تقرير حركة المخزون (وهي القيمة الفعلية كما احتسبها أودو حتى نهاية الفترة المحددة تمامًا)؛ لا تُستخدم بيانات تقرير متغير المنتج لهذا الغرض لأنها رصيد حالي/لحظي وليست خاصة بالفترة المطلوبة.</div>
+    <div class="note-box">يُحسب معدل الدوران السنوي = (كمية الصادر ÷ متوسط المخزون) × (365 ÷ أيام التوفر الفعلية). التصنيف: <b>سريع</b> ≥ 12 دورة/سنة، <b>متوسط</b> 4–12، <b>بطيء</b> 1–4، <b>متلكئ</b> أقل من دورة واحدة سنويًا. للمواد التي رصيدها الافتتاحي = صفر، تُحسب «أيام التوفر» من تاريخ أول عملية شراء فعلية للمادة حتى نهاية الفترة (بدل كامل مدة التقرير) لتجنّب تسجيل دوران منخفض وهمي لمادة لم تكن متوفرة أصلًا طوال الفترة. تكلفة الوحدة: إن رُفع تقرير ربحية المنتجات (اختياري) وتوفّرت فيه المادة، تُعتمد «متوسط تكلفة الوحدة» منه لدقّتها؛ وإلا فتُحسب من (قيمة التكلفة ÷ الكمية المباعة) بتقرير تقييم المبيعات، وإلا فمن تقرير حركة المخزون. <b>قيمة المخزون</b> تُؤخذ مباشرة من عمود «Total Value» بورقة Summary في تقرير حركة المخزون (وهي القيمة الفعلية كما احتسبها أودو حتى نهاية الفترة المحددة تمامًا)؛ لا تُستخدم بيانات تقرير متغير المنتج لهذا الغرض لأنها رصيد حالي/لحظي وليست خاصة بالفترة المطلوبة.</div>
     <div id="turnoverTable"></div>
   `;
   const columns = [
@@ -1880,6 +2073,81 @@ function renderPurchases(){
 }
 
 /* =========================================================================
+   VIEW: CUSTOMERS
+   ========================================================================= */
+function renderCustomers(){
+  const el = document.getElementById('view-customers');
+  const customers = STATE.customers || [];
+
+  if(customers.length===0){
+    el.innerHTML = `
+      <div class="empty-state">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M17 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2M11 3a4 4 0 1 1 0 8 4 4 0 0 1 0-8ZM19.5 21v-2a3.5 3.5 0 0 0-2.5-3.35M16 3.13a3.5 3.5 0 0 1 0 6.74"/></svg>
+        <h3>لا تتوفر بيانات عملاء</h3>
+        <p>ارفع ملف «تحليل الأرباح» (اختياري) من صفحة استيراد التقارير لعرض هذا القسم — يحتوي بيانات كل فاتورة لكل زبون.</p>
+      </div>`;
+    return;
+  }
+
+  const k = STATE.customerKpis;
+  const top10 = customers.slice().sort((a,b)=>b.revenue-a.revenue).slice(0,10);
+
+  el.innerHTML = `
+    <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);">
+      <div class="card kpi accent"><div class="lbl">إجمالي إيراد العملاء</div><div class="val">${fmtCur(k.totalRevenue)}</div></div>
+      <div class="card kpi gold"><div class="lbl">إجمالي الربح</div><div class="val">${fmtCur(k.totalMargin)}</div></div>
+      <div class="card kpi"><div class="lbl">نسبة الربحية</div><div class="val">${fmtPct(k.marginPct)}</div></div>
+      <div class="card kpi"><div class="lbl">عدد الزبائن</div><div class="val num">${fmtNum(k.customerCount)}</div></div>
+    </div>
+    <div class="card" style="margin-bottom:18px;">
+      <div class="card-title"><span>أعلى 10 زبائن حسب الإيراد</span></div>
+      <div class="chart-wrap"><canvas id="chartTopCustomers"></canvas></div>
+    </div>
+    <div id="customersTable"></div>
+  `;
+
+  chartDefaults(); killChart('topCustomers');
+  STATE.charts.topCustomers = safeChart(document.getElementById('chartTopCustomers'), {
+    type:'bar',
+    data:{ labels: top10.map(c=>c.name.length>22?c.name.slice(0,22)+'…':c.name),
+      datasets:[
+        {label:'الإيراد', data:top10.map(c=>c.revenue), backgroundColor:cssVar('--accent'), borderRadius:5, maxBarThickness:18},
+        {label:'الربح', data:top10.map(c=>c.margin), backgroundColor:cssVar('--gold'), borderRadius:5, maxBarThickness:18},
+      ]},
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{position:'top', labels:{boxWidth:10,font:{size:11}}}, tooltip:{callbacks:{label:c=>c.dataset.label+': '+fmtNum(c.raw,0)+' د.ع'}} },
+      scales:{ x:{ ticks:{callback:v=>fmtNum(v,0)}, grid:{color:cssVar('--line')} }, y:{ grid:{display:false}, ticks:{font:{size:10.5}} } } }
+  });
+
+  const columns = [
+    { key:'name', label:'الزبون', wrap:true },
+    { key:'rank', label:'التصنيف', format:v=>customerRankBadge(v) },
+    { key:'invoiceCount', label:'عدد الفواتير', align:'left', format:v=>'<span class="num">'+fmtNum(v)+'</span>' },
+    { key:'avgInvoiceValue', label:'متوسط الفاتورة', align:'left', format:v=>fmtCur(v) },
+    { key:'revenue', label:'إجمالي الإيراد', align:'left', format:v=>fmtCur(v) },
+    { key:'margin', label:'الربح', align:'left', format:v=>'<span style="color:'+(v>=0?'var(--good)':'var(--bad)')+'">'+fmtCur(v)+'</span>' },
+    { key:'marginPct', label:'نسبة الربحية', align:'left', format:v=>fmtPct(v) },
+    { key:'severity', label:'الأولوية', format:v=>sevBadge(v) },
+    { key:'advice', label:'التوصية', wrap:true, format:v=>'<span style="color:var(--text)">'+esc(v)+'</span>' },
+  ];
+  const sevOrder = {bad:0, warn:1, good:2, info:3};
+  columns.find(c=>c.key==='severity').sortVal = r=>sevOrder[r.severity];
+  DataTable(document.getElementById('customersTable'), {
+    columns, rows: customers, pageSize:20,
+    defaultSort:'revenue',
+    searchPlaceholder:'ابحث باسم الزبون...',
+    searchText:r=>r.name+' '+r.advice,
+    filters:[
+      {label:'الكل', value:null},
+      {label:'الأعلى قيمة', value:'الأعلى قيمة'},
+      {label:'متوسط القيمة', value:'متوسط القيمة'},
+      {label:'الأقل قيمة', value:'الأقل قيمة'},
+    ],
+    filterFn:(r,f)=>r.rank===f,
+  });
+}
+
+/* =========================================================================
    VIEW: ADVICE
    ========================================================================= */
 function renderAdvice(){
@@ -1971,6 +2239,17 @@ function exportReport(){
   }));
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(adviceRows), 'النصائح الإدارية');
 
+  if(STATE.customers && STATE.customers.length){
+    const customerRows = STATE.customers.map(c=>({
+      'الزبون':c.name, 'التصنيف':c.rank, 'عدد الفواتير':c.invoiceCount,
+      'متوسط الفاتورة':Math.round(c.avgInvoiceValue), 'إجمالي الإيراد':Math.round(c.revenue),
+      'الربح':Math.round(c.margin), 'نسبة الربحية (%)': c.marginPct===null?'':Number(c.marginPct.toFixed(2)),
+      'الأولوية': ({bad:'عاجل',warn:'يستدعي انتباه',good:'ممتاز',info:'طبيعي'})[c.severity],
+      'التوصية':c.advice,
+    }));
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(customerRows), 'تحليل العملاء');
+  }
+
   const dstr = new Date().toISOString().slice(0,10);
   XLSX.writeFile(wb, 'تقرير_وهج_الماسة_'+dstr+'.xlsx');
   showToast('تم تنزيل التقرير الكامل');
@@ -1987,6 +2266,7 @@ function reRenderAllViews(){
   safeRender('sales', renderSales);
   safeRender('profit', renderProfit);
   safeRender('purchases', renderPurchases);
+  safeRender('customers', renderCustomers);
   safeRender('advice', renderAdvice);
 }
 document.querySelectorAll('#themeSwitch .theme-dot').forEach(dot=>{
