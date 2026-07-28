@@ -1884,7 +1884,7 @@ function renderOverview(){
 function renderTurnover(){
   const el = document.getElementById('view-turnover');
   el.innerHTML = `
-    <div class="note-box">يُحسب معدل الدوران السنوي = (كمية الصادر ÷ متوسط المخزون) × (365 ÷ أيام التوفر الفعلية). التصنيف: <b>سريع</b> ≥ 12 دورة/سنة، <b>متوسط</b> 4–12، <b>بطيء</b> 1–4، <b>متلكئ</b> أقل من دورة واحدة سنويًا. للمواد التي رصيدها الافتتاحي = صفر، تُحسب «أيام التوفر» من تاريخ أول عملية شراء فعلية للمادة حتى نهاية الفترة (بدل كامل مدة التقرير) لتجنّب تسجيل دوران منخفض وهمي لمادة لم تكن متوفرة أصلًا طوال الفترة. تكلفة الوحدة: إن رُفع تقرير ربحية المنتجات (اختياري) وتوفّرت فيه المادة، تُعتمد «متوسط تكلفة الوحدة» منه لدقّتها؛ وإلا فتُحسب من (قيمة التكلفة ÷ الكمية المباعة) بتقرير تقييم المبيعات، وإلا فمن تقرير حركة المخزون. <b>قيمة المخزون</b> تُؤخذ مباشرة من عمود «Total Value» بورقة Summary في تقرير حركة المخزون (وهي القيمة الفعلية كما احتسبها أودو حتى نهاية الفترة المحددة تمامًا)؛ لا تُستخدم بيانات تقرير متغير المنتج لهذا الغرض لأنها رصيد حالي/لحظي وليست خاصة بالفترة المطلوبة.</div>
+    <div class="note-box">يُحسب معدل الدوران السنوي = (كمية الصادر ÷ متوسط المخزون) × (365 ÷ أيام التوفر الفعلية). التصنيف: <b>سريع</b> ≥ 12 دورة/سنة، <b>متوسط</b> 4–12، <b>بطيء</b> 1–4، <b>متلكئ</b> أقل من دورة واحدة سنويًا. للمواد التي رصيدها الافتتاحي = صفر، تُحسب «أيام التوفر» من تاريخ أول عملية شراء فعلية للمادة حتى نهاية الفترة (بدل كامل مدة التقرير) لتجنّب تسجيل دوران منخفض وهمي لمادة لم تكن متوفرة أصلًا طوال الفترة. تكلفة الوحدة: إن رُفع تقرير ربحية المنتجات (اختياري) وتوفّرت فيه المادة، تُعتمد «متوسط تكلفة الوحدة» منه لدقّتها؛ وإلا فتُحسب من (قيمة التكلفة ÷ الكمية المباعة) بتقرير تقييم المبيعات، وإلا فمن تقرير حركة المخزون. <b>قيمة المخزون</b> تُؤخذ مباشرة من عمود «Total Value» بورقة Summary في تقرير حركة المخزون (وهي القيمة الفعلية كما احتسبها أودو حتى نهاية الفترة المحددة تمامًا)؛ لا تُستخدم بيانات تقرير متغير المنتج لهذا الغرض لأنها رصيد حالي/لحظي وليست خاصة بالفترة المطلوبة. <b>ملاحظة على التوازن</b>: الافتتاحي + الوارد − الصادر + المرتجعات (± تسويات تصنيع/تالف/جرد أخرى غير معروضة هنا) = الرصيد الختامي؛ لهذا قد لا يتطابق (افتتاحي − صادر) مع الختامي مباشرة دون احتساب عمود المرتجعات.</div>
     <div id="turnoverTable"></div>
   `;
   const columns = [
@@ -1894,6 +1894,7 @@ function renderTurnover(){
     { key:'opening', label:'افتتاحي', align:'left', format:v=>'<span class="num">'+fmtNum(v)+'</span>' },
     { key:'inQty', label:'وارد', align:'left', format:v=>'<span class="num">'+fmtNum(v)+'</span>' },
     { key:'outQty', label:'صادر', align:'left', format:v=>'<span class="num">'+fmtNum(Math.abs(v))+'</span>' },
+    { key:'returns', label:'مرتجعات', align:'left', format:v=>'<span class="num" style="color:'+(Math.abs(v)>1e-9?'var(--gold)':'var(--muted)')+'">'+fmtNum(v)+'</span>' },
     { key:'closing', label:'الرصيد الختامي', align:'left', format:v=>'<span class="num">'+fmtNum(v)+'</span>' },
     { key:'effectiveDays', label:'أيام التوفر', align:'left', format:(v,r)=>'<span class="num">'+fmtNum(v)+'</span>'+(r.opening<1e-9 && v<STATE.periodDays?' <span class="badge info" style="padding:1px 7px;font-size:9.5px;">مادة جديدة</span>':'') },
     { key:'annualTurns', label:'الدوران السنوي', align:'left', format:v=>'<span class="num">'+fmtNum(v,2)+'x</span>' },
@@ -1949,6 +1950,7 @@ function renderSales(){
     { key:'salesQty', label:'الكمية المباعة', align:'left', format:v=>'<span class="num">'+fmtNum(v)+'</span>' },
     { key:'orders', label:'عدد الطلبات', align:'left', format:v=>'<span class="num">'+fmtNum(v)+'</span>' },
     { key:'saleValue', label:'قيمة البيع', align:'left', format:v=>fmtCur(v) },
+    { key:'costValue', label:'تكلفة المبيعات', align:'left', format:v=>fmtCur(v) },
     { key:'margin', label:'الربح', align:'left', format:(v)=>'<span style="color:'+(v>=0?'var(--good)':'var(--bad)')+'">'+fmtCur(v)+'</span>' },
     { key:'marginPct', label:'نسبة الربحية', align:'left', format:v=>fmtPct(v) },
   ];
@@ -2006,6 +2008,7 @@ function renderProfit(){
 
   const columns = [
     { key:'name', label:'المادة', wrap:true },
+    { key:'salesQty', label:'عدد الوحدات المباعة', align:'left', format:v=>'<span class="num">'+fmtNum(v)+'</span>' },
     { key:'unitCostEffective', label:'تكلفة الوحدة', align:'left', format:v=>fmtCur(v) },
     { key:'costValue', label:'قيمة التكلفة', align:'left', format:v=>fmtCur(v) },
     { key:'saleValue', label:'قيمة البيع', align:'left', format:v=>fmtCur(v) },
@@ -2161,9 +2164,14 @@ function renderAdvice(){
   `;
   const columns = [
     { key:'name', label:'المادة', wrap:true },
+    { key:'opening', label:'افتتاحي', align:'left', format:v=>'<span class="num">'+fmtNum(v)+'</span>' },
+    { key:'closing', label:'ختامي', align:'left', format:v=>'<span class="num">'+fmtNum(v)+'</span>' },
+    { key:'salesQty', label:'الكمية المباعة', align:'left', format:v=>'<span class="num">'+fmtNum(v)+'</span>' },
+    { key:'annualTurns', label:'معدل الدوران', align:'left', format:v=>'<span class="num">'+fmtNum(v,2)+'x</span>' },
     { key:'turnoverClass', label:'دوران المخزون', format:v=>classBadge(v) },
     { key:'salesRank', label:'ترتيب المبيعات', format:v=>rankBadge(v) },
     { key:'marginPct', label:'الربحية', align:'left', format:v=>fmtPct(v) },
+    { key:'stockValueEff', label:'قيمة المخزون', align:'left', format:v=>fmtCur(v) },
     { key:'severity', label:'الأولوية', format:v=>sevBadge(v) },
     { key:'advice', label:'التوصية الإدارية', wrap:true, format:v=>'<span style="color:var(--text)">'+esc(v)+'</span>' },
   ];
@@ -2213,7 +2221,7 @@ function exportReport(){
 
   const turnoverRows = STATE.products.map(p=>({
     'المادة':p.name, 'الفئة':p.category, 'العلامة التجارية':p.brand, 'التصنيف':p.turnoverClass,
-    'رصيد افتتاحي':p.opening, 'وارد':p.inQty, 'صادر':Math.abs(p.outQty), 'رصيد ختامي':p.closing,
+    'رصيد افتتاحي':p.opening, 'وارد':p.inQty, 'صادر':Math.abs(p.outQty), 'مرتجعات':p.returns, 'رصيد ختامي':p.closing,
     'أيام التوفر الفعلية':p.effectiveDays, 'الدوران السنوي':Number(p.annualTurns.toFixed(2)), 'أيام التغطية': p.dsi===null?'':Math.round(p.dsi),
     'تكلفة الوحدة':Number(p.unitCostEffective.toFixed(2)), 'قيمة المخزون':Math.round(p.stockValueEff),
   }));
@@ -2232,8 +2240,9 @@ function exportReport(){
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(purchaseRows), 'مشتريات الفترة');
 
   const adviceRows = STATE.products.map(p=>({
-    'المادة':p.name, 'تصنيف الدوران':p.turnoverClass, 'ترتيب المبيعات':p.salesRank,
-    'نسبة الربحية (%)': p.marginPct===null?'':Number(p.marginPct.toFixed(2)),
+    'المادة':p.name, 'افتتاحي':p.opening, 'ختامي':p.closing, 'الكمية المباعة':p.salesQty,
+    'معدل الدوران':Number(p.annualTurns.toFixed(2)), 'تصنيف الدوران':p.turnoverClass, 'ترتيب المبيعات':p.salesRank,
+    'نسبة الربحية (%)': p.marginPct===null?'':Number(p.marginPct.toFixed(2)), 'قيمة المخزون':Math.round(p.stockValueEff),
     'الأولوية': ({bad:'عاجل',warn:'يستدعي انتباه',good:'ممتاز',info:'طبيعي'})[p.severity],
     'التوصية الإدارية':p.advice,
   }));
